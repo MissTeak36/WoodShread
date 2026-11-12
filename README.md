@@ -20,8 +20,8 @@ The player chooses their instrument. That sets the clef, written vs concert pitc
 - [x] Repository structure
 - [x] Scan result format (`scanner/schema.md`)
 - [ ] Recognition engine wired into the scanner (currently returns a sample result)
-- [ ] Score rendering in the player
-- [ ] Practice player (transport, sections, tempo, mix)
+- [x] Score rendering in the player (VexFlow), with flagged items in red and tap-to-correct
+- [x] Practice player (transport, count-in, sections, tempo, feel, speed-up, guide/drums/click mix)
 
 ## Running locally
 
@@ -33,4 +33,4 @@ pip install -r requirements.txt
 uvicorn app:app --reload --port 8000
 ```
 
-Player: open `web/index.html` in a browser. It talks to `http://localhost:8000` by default.
+Player: open `web/index.html` in a browser. Set the scanner address under "Scanner address" (it defaults to the Railway service).

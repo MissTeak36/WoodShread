@@ -4,45 +4,120 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>WoodShread</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;600&family=Patrick+Hand&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/vexflow@4.2.5/build/cjs/vexflow.js"></script>
 <style>
   :root {
     --bg: #e6e8e6; --panel: #f2f4f1; --paper: #faf9f4; --line: #cfd2cd;
     --ink: #1f2324; --muted: #5d6466; --accent: #a0762b; --accent-soft: #f3deb2;
-    --flag: #c0392b; --flag-soft: #fbe3e0;
+    --flag: #c0392b; --flag-soft: rgba(192, 57, 43, .10); --now: rgba(160, 118, 43, .16);
+    --hand: "Patrick Hand", "Comic Sans MS", cursive;
+    --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--ink);
-         font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
-  main { max-width: 900px; margin: 0 auto; padding: 24px 16px 64px; }
-  h1 { margin: 0 0 4px; font-size: 1.8rem; }
-  h2 { margin: 0 0 12px; font-size: 1.25rem; }
-  .sub { color: var(--muted); margin: 0 0 20px; }
+         font: 16px/1.5 "IBM Plex Sans", system-ui, -apple-system, sans-serif; }
+  main { max-width: 960px; margin: 0 auto; padding: 24px 16px 80px; }
+  h1, h2 { font-family: var(--hand); font-weight: 400; }
+  h1 { margin: 0; font-size: 2.4rem; line-height: 1.1; }
+  h2 { margin: 0 0 12px; font-size: 1.9rem; line-height: 1.1; }
+  .sub { color: var(--muted); margin: 4px 0 20px; }
   .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
            padding: 20px; margin-bottom: 16px; }
-  label { display: block; font-weight: 600; margin: 12px 0 6px; }
-  select, input[type=text] { width: 100%; padding: 10px 12px; font: inherit;
-           background: var(--paper); border: 1px solid var(--line); border-radius: 8px; }
-  button { font: inherit; font-weight: 600; padding: 12px 24px; border: 0; border-radius: 8px;
-           background: var(--accent); color: #fff; cursor: pointer; margin-top: 16px; }
-  button:disabled { opacity: .5; cursor: default; }
-  .status { margin: 0 0 16px; }
+  .paper { background: var(--paper); }
+  label.f { display: block; font-weight: 600; margin: 14px 0 6px; }
+  select, input[type=text], input[type=number] {
+    font: inherit; padding: 10px 12px; background: var(--paper);
+    border: 1px solid var(--line); border-radius: 8px; color: var(--ink); }
+  select { width: 100%; }
+  button { font: inherit; cursor: pointer; color: var(--ink); }
+  .btn { padding: 10px 18px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 600; }
+  .btn:disabled { opacity: .5; cursor: default; }
+  .muted { color: var(--muted); }
+  .small { font-size: .9rem; }
+
+  /* Upload */
+  .uploadrow { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-top: 4px; }
+  details { margin-top: 14px; color: var(--muted); }
+  details input { width: 100%; }
+
+  /* Transport */
+  .transport { position: sticky; top: 8px; z-index: 5; display: flex; flex-wrap: wrap;
+               align-items: center; gap: 16px 28px; box-shadow: 0 4px 14px rgba(0,0,0,.06); }
+  .play { width: 150px; height: 64px; border: 0; border-radius: 8px; background: var(--accent);
+          color: #fff; font-weight: 600; font-size: 1.2rem; }
+  .play.on { background: #6f5220; }
+  .where { min-width: 170px; }
+  .where .bar { font-family: var(--hand); font-size: 1.9rem; line-height: 1; }
+  .dots { display: flex; gap: 6px; margin: 6px 0 4px; }
+  .dots i { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--muted); }
+  .dots i.on { background: var(--accent); border-color: var(--accent); }
+  .dots i.one.on { background: #6f5220; border-color: #6f5220; }
+  .where .msg { color: var(--muted); font-size: .95rem; }
+  .tempo { flex: 1; min-width: 260px; display: grid; grid-template-columns: auto auto auto 1fr auto;
+           gap: 10px 12px; align-items: center; }
+  .bpm { font-family: var(--mono); font-weight: 600; font-size: 2.2rem; line-height: 1; }
+  .bpmlab { color: var(--muted); }
+  .sq { width: 48px; height: 48px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); font-size: 1.3rem; }
+  .tap { grid-column: 3 / span 3; justify-self: start; }
+  input[type=range] { width: 100%; accent-color: var(--accent); }
+
+  /* Score */
+  .scorehead { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 16px; align-items: baseline; }
+  .meta { font-family: var(--mono); color: var(--muted); font-size: .95rem; }
+  .status { margin: 6px 0 10px; }
   .status b { color: var(--flag); }
   .status.ok b { color: var(--accent); }
-  .meta { font-family: ui-monospace, Menlo, monospace; color: var(--muted); font-size: .9rem; }
-  .bars { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
-  .bar { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
-  .bar.flagged { border-color: var(--flag); background: var(--flag-soft); }
-  .bar h3 { margin: 0 0 6px; font-size: .95rem; display: flex; justify-content: space-between; }
-  .bar h3 span { font-weight: 400; color: var(--muted); font-size: .8rem; }
-  .bar.flagged h3 span { color: var(--flag); font-weight: 600; }
-  .item { display: inline-block; margin: 2px 4px 2px 0; padding: 2px 6px; border-radius: 4px;
-          font-family: ui-monospace, Menlo, monospace; font-size: .85rem; background: #ecebe4; }
-  .item.flagged { color: #fff; background: var(--flag); cursor: pointer; }
-  .item.fixed { background: var(--accent-soft); }
-  .marks { color: var(--muted); font-size: .8rem; margin-top: 4px; }
-  .marks .flagged { color: var(--flag); font-weight: 600; }
-  .hint { color: var(--muted); font-size: .9rem; margin: 12px 0 0; }
-  details { margin-top: 12px; color: var(--muted); }
+  .scorewrap { position: relative; margin: 8px 0 4px; overflow: hidden; }
+  .scorewrap svg { display: block; }
+  .scorewrap svg .vf-stavenote { cursor: pointer; }
+  .hl { position: absolute; border-radius: 6px; pointer-events: none; }
+  .hl.flagbar { background: var(--flag-soft); outline: 1px dashed var(--flag); }
+  .hl.now { background: var(--now); outline: 2px solid var(--accent); scroll-margin-top: 170px; scroll-margin-bottom: 40px; display: none; }
+  .checks { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 8px 0; }
+  .checks button { border: 1px solid var(--flag); color: var(--flag); background: #fff; border-radius: 6px; padding: 4px 10px; font-size: .9rem; }
+  .notes { font-size: 1.05rem; margin: 14px 0 0; }
+  .explain { color: var(--muted); border-top: 1px dashed var(--line); margin: 14px 0 0; padding-top: 12px; }
+
+  /* Section */
+  .secs { display: grid; gap: 8px; }
+  .sec { text-align: left; padding: 12px 16px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); }
+  .sec b { font-family: var(--mono); margin-right: 12px; }
+  .sec span { color: var(--muted); }
+  .sec.on { background: var(--accent-soft); border-color: var(--accent); font-weight: 600; }
+  .bargrid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-top: 8px; }
+  .bargrid button { font-family: var(--mono); font-weight: 600; padding: 10px 0; border-radius: 8px;
+                    border: 1px solid var(--line); background: var(--paper); }
+  .bargrid button.in { background: var(--accent-soft); border-color: var(--accent); }
+  .bargrid button.from { background: var(--accent); color: #fff; }
+
+  /* Tempo & Mix */
+  .chips { display: flex; flex-wrap: wrap; gap: 10px; }
+  .chip { padding: 10px 18px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); font-size: 1.05rem; }
+  .chip.on { background: var(--accent-soft); border-color: var(--accent); font-weight: 600; }
+  .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .row input[type=number] { width: 110px; }
+  .row select { width: auto; }
+  .mixrow { display: grid; grid-template-columns: 130px 1fr; gap: 12px; align-items: center; margin: 6px 0; }
+  .mixrow label { display: flex; gap: 10px; align-items: center; font-size: 1.15rem; }
+  .check { display: flex; gap: 10px; align-items: center; margin: 10px 0; font-size: 1.05rem; }
+  input[type=checkbox] { width: 20px; height: 20px; accent-color: #2f6fdb; }
+
+  dialog { border: 1px solid var(--line); border-radius: 12px; padding: 20px; max-width: 360px; width: 92vw; }
+  dialog h3 { margin: 0 0 6px; font-family: var(--hand); font-weight: 400; font-size: 1.6rem; }
+  dialog input { width: 100%; margin: 8px 0; }
+  dialog .err { color: var(--flag); min-height: 1.2em; font-size: .9rem; }
+  dialog .row { justify-content: flex-end; margin-top: 8px; }
+
+  @media (max-width: 600px) {
+    .bargrid { grid-template-columns: repeat(4, 1fr); }
+    .transport { gap: 12px 18px; }
+    .play { width: 110px; height: 56px; }
+    .mixrow { grid-template-columns: 110px 1fr; }
+  }
 </style>
 </head>
 <body>
@@ -50,141 +125,820 @@
   <h1>WoodShread</h1>
   <p class="sub">Upload a scan of your part, check anything in red, then practise it.</p>
 
-  <section class="panel">
+  <section class="panel" id="upload">
     <h2>Your part</h2>
-    <label for="instrument">Instrument</label>
+    <label class="f" for="instrument">Instrument</label>
     <select id="instrument"></select>
-    <label for="file">Scan (PNG, JPEG or PDF)</label>
-    <input id="file" type="file" accept="image/png,image/jpeg,application/pdf">
-    <button id="read" disabled>Read the scan</button>
+    <label class="f" for="file">Scan (PNG, JPEG or PDF)</label>
+    <div class="uploadrow">
+      <input id="file" type="file" accept="image/png,image/jpeg,application/pdf">
+      <button class="btn primary" id="read" disabled>Read the scan</button>
+    </div>
+    <p class="status" id="uploadStatus" hidden></p>
     <details>
       <summary>Scanner address</summary>
-      <label for="api">Scanner URL</label>
-      <input id="api" type="text">
+      <input id="api" type="text" aria-label="Scanner address">
     </details>
   </section>
 
-  <section class="panel" id="result" hidden>
-    <h2 id="title"></h2>
-    <p class="meta" id="meta"></p>
-    <p class="status" id="status"></p>
-    <div class="bars" id="bars"></div>
-    <p class="hint">Red items are ones the reader wasn't sure of. Tap one to confirm or correct it against your chart.</p>
-  </section>
+  <div id="player" hidden>
+    <section class="panel transport">
+      <button class="play" id="play">Play</button>
+      <div class="where">
+        <div class="bar" id="barLabel">Bar 25</div>
+        <div class="dots" id="dots"><i class="one"></i><i></i><i></i><i></i></div>
+        <div class="msg" id="msg">Ready. Two-bar count-in.</div>
+      </div>
+      <div class="tempo">
+        <span class="bpm" id="bpmNum">240</span><span class="bpmlab">BPM</span>
+        <button class="sq" id="down" aria-label="Slower">−</button>
+        <input type="range" id="bpm" min="40" max="320" step="1" aria-label="Tempo">
+        <button class="sq" id="up" aria-label="Faster">+</button>
+        <button class="btn tap" id="tap">Tap tempo</button>
+      </div>
+    </section>
+
+    <section class="panel paper">
+      <div class="scorehead">
+        <h2 id="title"></h2>
+        <span class="meta" id="meta"></span>
+      </div>
+      <p class="status" id="status"></p>
+      <div class="scorewrap" id="scorewrap"><div id="score"></div></div>
+      <div class="checks" id="checks"></div>
+      <p class="notes" id="notes"></p>
+      <p class="explain">Slash bars show the chord changes. Over them the guide plays a simple walking line of its own (or just roots), not the arranger's part. Written figures play at their written pitch; choose rhythm slashes under Mix to hear just a hit on each note.</p>
+      <p class="explain" id="pitchNote"></p>
+    </section>
+
+    <section class="panel">
+      <h2>Section</h2>
+      <div class="secs" id="secs"></div>
+      <p class="muted" style="margin:14px 0 4px">Or tap a first bar, then a last bar.</p>
+      <div class="bargrid" id="bargrid"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Tempo</h2>
+      <div class="chips" id="presets"></div>
+      <p class="muted small" id="tempoNote"></p>
+      <div class="row"><label for="goal"><b>Goal</b></label><input type="number" id="goal" min="40" max="320"></div>
+      <label class="f">Feel</label>
+      <div class="chips" id="feel"></div>
+      <label class="f">Speed up each pass</label>
+      <div class="row">
+        <select id="speedStep">
+          <option value="0">Off</option><option value="2">+2</option><option value="4">+4</option>
+          <option value="6">+6</option><option value="8">+8</option>
+        </select>
+        <span class="muted">up to</span>
+        <input type="number" id="speedMax" min="40" max="320">
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Mix</h2>
+      <div id="mix"></div>
+      <label class="f" for="guidePlays">Guide plays</label>
+      <select id="guidePlays">
+        <option value="every">Every pass</option>
+        <option value="other">Every other pass</option>
+        <option value="first">First pass only</option>
+        <option value="never">Never (you're on your own)</option>
+      </select>
+      <label class="f" for="figures">Written figures show</label>
+      <select id="figures">
+        <option value="pitches">Notes, at the written pitch</option>
+        <option value="hits">Rhythm slashes, with a hit on each note</option>
+      </select>
+      <label class="f" for="slashes">Over chord slashes, guide plays</label>
+      <select id="slashes">
+        <option value="walk">A walking line</option>
+        <option value="roots">Just roots</option>
+      </select>
+      <label class="f" for="clickOn">Click on</label>
+      <select id="clickOn">
+        <option value="24">Beats 2 and 4</option>
+        <option value="all">Every beat</option>
+        <option value="13">Beats 1 and 3</option>
+      </select>
+      <label class="f" for="restBars">Rest between passes</label>
+      <select id="restBars">
+        <option value="0">None</option><option value="1">1 bar</option><option value="2">2 bars</option>
+      </select>
+      <label class="check"><input type="checkbox" id="loop"> Loop the section</label>
+      <label class="check"><input type="checkbox" id="repeats"> Take repeats inside the section</label>
+      <label class="check"><input type="checkbox" id="follow"> Follow the music (scroll the score while playing)</label>
+      <label class="check"><input type="checkbox" id="raise"> Raise the guide an octave for small speakers</label>
+      <p class="muted small">No sound on iPhone? Turn off Silent mode.</p>
+    </section>
+  </div>
 </main>
 
-<script>
-// Instruments: clef, transposition from written to concert (semitones), guide octave.
-const INSTRUMENTS = {
-  "Bass (upright or electric)": { clef: "bass", transpose: -12 },
-  "Piano / keys":               { clef: "treble", transpose: 0 },
-  "Guitar":                     { clef: "treble", transpose: -12 },
-  "Trumpet in B♭":              { clef: "treble", transpose: -2 },
-  "Alto sax in E♭":             { clef: "treble", transpose: -9 },
-  "Tenor sax in B♭":            { clef: "treble", transpose: -14 },
-  "Baritone sax in E♭":         { clef: "treble", transpose: -21 },
-  "Trombone":                   { clef: "bass", transpose: 0 },
-  "Flute":                      { clef: "treble", transpose: 0 },
-  "Clarinet in B♭":             { clef: "treble", transpose: -2 },
-  "Violin":                     { clef: "treble", transpose: 0 },
-  "Cello":                      { clef: "bass", transpose: 0 },
-};
+<dialog id="fix">
+  <form method="dialog" id="fixForm">
+    <h3 id="fixTitle"></h3>
+    <p class="muted small" id="fixHint"></p>
+    <input type="text" id="fixInput" autocomplete="off" autocapitalize="off" spellcheck="false">
+    <div class="err" id="fixErr"></div>
+    <div class="row">
+      <button class="btn" value="cancel" formnovalidate>Cancel</button>
+      <button class="btn" value="ok" id="fixOk">It's correct</button>
+      <button class="btn primary" value="save" id="fixSave">Save</button>
+    </div>
+  </form>
+</dialog>
 
+<script>
+"use strict";
+/* ---------- Basics ---------- */
 const $ = id => document.getElementById(id);
 const store = {
-  get(k, d) { try { return localStorage.getItem(k) ?? d; } catch { return d; } },
-  set(k, v) { try { localStorage.setItem(k, v); } catch {} },
+  get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
 };
+const DEFAULT_API = "https://woodshread-production.up.railway.app";
 
+// clef, written-to-concert transposition in semitones, guide tone
+const INSTRUMENTS = {
+  "Bass (upright or electric)": { clef: "bass",   transpose: -12, tone: "bass" },
+  "Piano / keys":               { clef: "treble", transpose: 0,   tone: "keys" },
+  "Guitar":                     { clef: "treble", transpose: -12, tone: "keys" },
+  "Trumpet in B♭":              { clef: "treble", transpose: -2,  tone: "lead" },
+  "Alto sax in E♭":             { clef: "treble", transpose: -9,  tone: "lead" },
+  "Tenor sax in B♭":            { clef: "treble", transpose: -14, tone: "lead" },
+  "Baritone sax in E♭":         { clef: "treble", transpose: -21, tone: "bass" },
+  "Trombone":                   { clef: "bass",   transpose: 0,   tone: "lead" },
+  "Flute":                      { clef: "treble", transpose: 0,   tone: "lead" },
+  "Clarinet in B♭":             { clef: "treble", transpose: -2,  tone: "lead" },
+  "Violin":                     { clef: "treble", transpose: 0,   tone: "lead" },
+  "Cello":                      { clef: "bass",   transpose: 0,   tone: "bass" },
+};
+const SOUNDS = { 0: "at the written pitch", "-12": "an octave lower", "-2": "a major second lower",
+  "-9": "a major sixth lower", "-14": "a major ninth lower", "-21": "an octave and a sixth lower" };
+
+const S = Object.assign({
+  instrument: "Bass (upright or electric)", goal: 240, bpm: 240, feel: "swing",
+  speedStep: 0, speedMax: 240, guidePlays: "every", figures: "pitches", slashes: "walk",
+  clickOn: "24", restBars: 1, loop: true, repeats: true, follow: true, raise: false,
+  mix: { guide: { on: true, vol: 0.8 }, drums: { on: true, vol: 0.55 }, click: { on: true, vol: 0.55 } },
+}, store.get("ws.settings", {}));
+const save = () => store.set("ws.settings", S);
+
+let result = store.get("ws.result", null);
+let sel = null;            // { from, to } bar numbers
+let pendingFrom = null;    // first tap in the bar grid
+
+/* ---------- Music helpers ---------- */
+const STEP = { c: 0, d: 2, e: 4, f: 5, g: 7, a: 9, b: 11 };
+const ACC = { "": 0, "#": 1, "##": 2, b: -1, bb: -2, n: 0 };
+const BEATS = { whole: 4, half: 2, quarter: 1, eighth: 0.5, sixteenth: 0.25 };
+const VFDUR = { whole: "w", half: "h", quarter: "q", eighth: "8", sixteenth: "16" };
+
+function parsePitch(str, nearMidi) {
+  const m = String(str || "").trim().replace("♭", "b").replace("♯", "#")
+    .match(/^([A-Ga-g])(##|#|bb|b|n)?(-?\d)?$/);
+  if (!m) return null;
+  const letter = m[1].toLowerCase(), acc = m[2] || "";
+  const pc = STEP[letter] + ACC[acc];
+  let oct;
+  if (m[3] !== undefined) oct = +m[3];
+  else {                                   // no octave given: nearest to the surrounding notes
+    oct = 3; let best = 1e9;
+    for (let o = 0; o < 8; o++) { const d = Math.abs(12 * (o + 1) + pc - nearMidi); if (d < best) { best = d; oct = o; } }
+  }
+  return { letter, acc, oct, midi: 12 * (oct + 1) + pc,
+           name: letter.toUpperCase() + acc + oct, key: `${letter}${acc === "n" ? "n" : acc}/${oct}` };
+}
+const inst = () => INSTRUMENTS[S.instrument] || INSTRUMENTS["Bass (upright or electric)"];
+const clef = () => (result && result.clef) || inst().clef;
+const centre = () => clef() === "bass" ? 48 : 67;
+const items = bar => bar.items || [];
+const isNote = i => i.type === "note";
+const chordOf = bar => (items(bar).find(i => i.type === "chord") || {}).value;
+const isSlashBar = bar => items(bar).some(i => i.type === "slash" || i.type === "rhythm");
+const isFigureBar = bar => items(bar).some(isNote);
+const isRestBar = bar => items(bar).every(i => i.type === "rest");
+const hasMark = (bar, v) => (bar.marks || []).some(m => m.value === v || m.type === v);
+const allFlagged = () => result.bars.flatMap(b =>
+  [...items(b), ...(b.marks || [])].filter(i => i.flagged).map(i => ({ bar: b, item: i })));
+const recalcBar = bar => { bar.flagged = [...items(bar), ...(bar.marks || [])].some(i => i.flagged); };
+
+function parseChord(sym) {
+  const m = String(sym || "").match(/^([A-G])(#|b)?(.*)$/);
+  if (!m) return null;
+  const q = m[3];
+  const minor = /^(mi|min|m(?!a)|-)/.test(q), dim = /^(dim|o|°|ø|mi7b5|m7b5)/.test(q);
+  return { root: STEP[m[1].toLowerCase()] + (m[2] === "#" ? 1 : m[2] === "b" ? -1 : 0),
+           third: minor || dim ? 3 : 4, fifth: dim ? 6 : 7 };
+}
+const inRange = (pc, lo) => lo + ((pc - lo) % 12 + 12) % 12;
+
+function rangeText(nums) {
+  if (!nums.length) return "";
+  const runs = []; let s = nums[0], p = nums[0];
+  for (const n of nums.slice(1).concat([null])) {
+    if (n === p + 1) { p = n; continue; }
+    runs.push(s === p ? `${s}` : p === s + 1 ? `${s} and ${p}` : `${s} to ${p}`);
+    s = p = n;
+  }
+  return runs.join(", ");
+}
+
+/* ---------- Upload ---------- */
 for (const name of Object.keys(INSTRUMENTS)) $("instrument").add(new Option(name, name));
-$("instrument").value = store.get("ws.instrument", "Bass (upright or electric)");
-$("instrument").onchange = e => store.set("ws.instrument", e.target.value);
-
-$("api").value = store.get("ws.api", "http://localhost:8000");
-$("api").onchange = e => store.set("ws.api", e.target.value.replace(/\/$/, ""));
-
+$("instrument").value = S.instrument;
+$("instrument").onchange = e => { S.instrument = e.target.value; save(); if (result) { renderAll(); } };
+$("api").value = store.get("ws.api", DEFAULT_API);
+$("api").onchange = e => { const v = e.target.value.trim().replace(/\/+$/, ""); e.target.value = v; store.set("ws.api", v); };
 $("file").onchange = () => { $("read").disabled = !$("file").files.length; };
-
-let result = null;
 
 $("read").onclick = async () => {
   const fd = new FormData();
   fd.append("file", $("file").files[0]);
-  $("read").disabled = true;
-  $("read").textContent = "Reading…";
+  $("read").disabled = true; $("read").textContent = "Reading…";
+  $("uploadStatus").hidden = true;
   try {
-    const res = await fetch($("api").value + "/scan", { method: "POST", body: fd });
-    if (!res.ok) throw new Error((await res.json()).detail || res.statusText);
-    result = await res.json();
-    render();
+    const res = await fetch($("api").value.replace(/\/+$/, "") + "/scan", { method: "POST", body: fd });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(body.detail || res.statusText);
+    result = body; sel = null; store.set("ws.result", result);
+    stop(); renderAll();
+    $("player").scrollIntoView({ behavior: "smooth" });
   } catch (err) {
-    $("result").hidden = false;
-    $("status").className = "status";
-    $("status").innerHTML = `<b>Status:</b> Couldn't read the scan. ${err.message}`;
-    $("bars").innerHTML = "";
-  } finally {
-    $("read").disabled = false;
-    $("read").textContent = "Read the scan";
+    $("uploadStatus").hidden = false; $("uploadStatus").className = "status";
+    $("uploadStatus").innerHTML = `<b>Status:</b> Couldn't read the scan. ${err.message === "Load failed" || err.message === "Failed to fetch" ? "The scanner didn't answer; check the scanner address." : err.message}`;
+  } finally { $("read").disabled = false; $("read").textContent = "Read the scan"; }
+};
+
+/* ---------- Score rendering ---------- */
+let geo = {};          // bar number -> { x, y, w, h }
+let nowEl = null;
+
+function renderScore() {
+  const VF = Vex.Flow;
+  const host = $("score"), wrap = $("scorewrap");
+  host.innerHTML = ""; wrap.querySelectorAll(".hl").forEach(e => e.remove()); geo = {};
+  const W = Math.max(300, wrap.clientWidth);
+  const bars = result.bars, key = result.key || "C", cl = clef();
+  const time = result.time === "cut" ? "C|" : result.time === "common" ? "C" : (result.time || "4/4");
+
+  const plain = new VF.Stave(0, 0, 400).getNoteStartX();
+  const extra = (withTime) => {
+    const s = new VF.Stave(0, 0, 400).addClef(cl).addKeySignature(key);
+    if (withTime) s.addTimeSignature(time);
+    return s.getNoteStartX() - plain;
+  };
+  const perRow = Math.max(2, Math.min(6, Math.floor((W - 40) / 165)));
+  const rowH = 128, top = 44;
+  const rows = Math.ceil(bars.length / perRow);
+  const renderer = new VF.Renderer(host, VF.Renderer.Backends.SVG);
+  renderer.resize(W, top + rows * rowH);
+  const ctx = renderer.getContext();
+  const red = { fillStyle: "#c0392b", strokeStyle: "#c0392b" };
+  let near = centre();
+
+  bars.forEach((bar, i) => {
+    const row = Math.floor(i / perRow), col = i % perRow;
+    const n = bars.length < perRow ? bars.length : perRow;
+    const exRow = extra(row === 0);
+    const base = (W - 2 - exRow) / n;
+    const y = top + row * rowH;
+    const x = col === 0 ? 1 : 1 + exRow + base * col;
+    const w = col === 0 ? base + exRow : base;
+    const stave = new VF.Stave(x, y, w);
+    if (col === 0) { stave.addClef(cl).addKeySignature(key); if (i === 0) stave.addTimeSignature(time); }
+    if (i === bars.length - 1) stave.setEndBarType(VF.Barline.type.END);
+    stave.setContext(ctx).draw();
+
+    const restKey = cl === "bass" ? "d/3" : "b/4";
+    const notes = [], map = [];
+    for (const it of items(bar)) {
+      if (it.type === "chord") continue;
+      const dur = VFDUR[it.duration] || "q";
+      let sn;
+      if (it.type === "rest") sn = new VF.StaveNote({ clef: cl, keys: [restKey], duration: dur + "r" });
+      else if (it.type === "slash" || it.type === "rhythm") sn = new VF.StaveNote({ clef: cl, keys: [restKey], duration: dur + "s" });
+      else {
+        const p = parsePitch(it.pitch, near);
+        if (p && S.figures === "pitches") { near = p.midi; sn = new VF.StaveNote({ clef: cl, keys: [p.key], duration: dur, auto_stem: true }); }
+        else sn = new VF.StaveNote({ clef: cl, keys: [restKey], duration: dur + "s" });
+        if (it.articulation === "staccato") sn.addModifier(new VF.Articulation("a."), 0);
+      }
+      if (it.flagged) sn.setStyle(red);
+      notes.push(sn); map.push(it);
+    }
+    if (!notes.length) return;
+    const chord = chordOf(bar);
+    if (chord) notes[0].addModifier(new VF.Annotation(chord).setFont("Arial", 13)
+      .setVerticalJustification(VF.Annotation.VerticalJustify.TOP).setJustification((VF.Annotation.HorizontalJustify || VF.Annotation.Justify).LEFT), 0);
+    const dyn = (bar.marks || []).find(m => m.type === "dynamic");
+    if (dyn) notes[0].addModifier(new VF.Annotation(dyn.value).setFont("Times New Roman", 16, "bold", "italic")
+      .setVerticalJustification(VF.Annotation.VerticalJustify.BOTTOM), 0);
+
+    const voice = new VF.Voice({ num_beats: 4, beat_value: 4 }).setMode(VF.Voice.Mode.SOFT).addTickables(notes);
+    VF.Accidental.applyAccidentals([voice], key);
+    const beams = VF.Beam.generateBeams(notes, { beam_rests: false, maintain_stem_directions: false });
+    new VF.Formatter().joinVoices([voice]).format([voice], Math.max(40, stave.getNoteEndX() - stave.getNoteStartX() - 12));
+    voice.draw(ctx, stave);
+    beams.forEach(b => b.setContext(ctx).draw());
+
+    // click any note to check or correct it
+    notes.forEach((sn, k) => {
+      const el = sn.getSVGElement ? sn.getSVGElement() : document.getElementById("vf-" + sn.getAttribute("id"));
+      const it = map[k];
+      if (el && it.type !== "rest") el.addEventListener("click", () => openFix(bar, it));
+    });
+
+    ctx.save(); ctx.setFont("Arial", 11); ctx.setFillStyle("#5d6466");
+    ctx.fillText(String(bar.number), x + 2, stave.getYForLine(0) - 22);
+    ctx.restore();
+
+    if (hasMark(bar, "crescendo") || hasMark(bar, "diminuendo")) {
+      const nextSameRow = bars[i + 1] && Math.floor((i + 1) / perRow) === row;
+      const x1 = stave.getNoteStartX() + (stave.getNoteEndX() - stave.getNoteStartX()) * 0.55;
+      const x2 = nextSameRow ? x + w + base - 10 : x + w - 8;
+      const yy = stave.getYForLine(4) + 30, open = 6, cres = hasMark(bar, "crescendo");
+      ctx.beginPath();
+      if (cres) { ctx.moveTo(x2, yy - open); ctx.lineTo(x1, yy); ctx.lineTo(x2, yy + open); }
+      else { ctx.moveTo(x1, yy - open); ctx.lineTo(x2, yy); ctx.lineTo(x1, yy + open); }
+      ctx.setStrokeStyle(bar.marks.find(m => m.value === "crescendo" || m.value === "diminuendo").flagged ? "#c0392b" : "#1f2324");
+      ctx.stroke();
+    }
+
+    const g = { x, y: stave.getYForLine(0) - 22, w, h: stave.getYForLine(4) - stave.getYForLine(0) + 50 };
+    geo[bar.number] = g;
+    if (bar.flagged) wrap.appendChild(box("hl flagbar", g));
+  });
+  nowEl = box("hl now", { x: 0, y: 0, w: 0, h: 0 });
+  wrap.appendChild(nowEl);
+}
+function box(cls, g) {
+  const d = document.createElement("div"); d.className = cls;
+  Object.assign(d.style, { left: g.x + "px", top: g.y + "px", width: g.w + "px", height: g.h + "px" });
+  return d;
+}
+function showNow(num) {
+  const g = geo[num];
+  if (!nowEl || !g) { if (nowEl) nowEl.style.display = "none"; return; }
+  Object.assign(nowEl.style, { display: "block", left: g.x + "px", top: g.y + "px", width: g.w + "px", height: g.h + "px" });
+  if (S.follow) nowEl.scrollIntoView({ block: "nearest", behavior: "smooth" });
+}
+
+/* ---------- Status, checks, notes ---------- */
+function renderText() {
+  const bars = result.bars, first = bars[0].number, last = bars.at(-1).number;
+  $("title").textContent = result.title || "Your part";
+  $("meta").textContent = `${S.instrument.split(" (")[0]} · Key ${result.key || "C"} · Bars ${first} to ${last}`;
+  const flagged = allFlagged();
+  const fb = new Set(flagged.map(f => f.bar.number)).size;
+  $("status").className = flagged.length ? "status" : "status ok";
+  $("status").innerHTML = flagged.length
+    ? `<b>Status:</b> ${flagged.length} item${flagged.length > 1 ? "s" : ""} in ${fb} bar${fb > 1 ? "s" : ""} need checking. Tap anything in red.`
+    : `<b>Status:</b> Everything checked. Tap any note to change it.`;
+  const ch = $("checks"); ch.innerHTML = "";
+  if (flagged.length) {
+    ch.append(Object.assign(document.createElement("span"), { className: "muted small", textContent: "Check:" }));
+    flagged.forEach(({ bar, item }) => {
+      const b = document.createElement("button");
+      b.textContent = `Bar ${bar.number} · ${describeItem(bar, item)}`;
+      b.onclick = () => openFix(bar, item);
+      ch.append(b);
+    });
+  }
+  $("notes").textContent = practiceNotes();
+  const t = inst().transpose + (S.raise ? 12 : 0);
+  const how = SOUNDS[t] || (t > 0 ? `${t} semitones higher` : `${-t} semitones lower`);
+  $("pitchNote").textContent = `Written pitch, read from your chart. The guide sounds ${how}` +
+    `${t === inst().transpose && t !== 0 ? `, as a ${S.instrument.split(" (")[0].replace(" in", "").toLowerCase()} does` : ""}, over plain drum time with no horns or chords. If a note differs from your part, trust the part and tap the note to fix it.`;
+}
+function describeItem(bar, item) {
+  if (item.type === "chord") return `chord ${item.value || "?"}`;
+  if (bar.marks && bar.marks.includes(item)) return item.value;
+  const idx = items(bar).filter(i => i.type !== "chord").indexOf(item) + 1;
+  return item.type === "note" ? `note ${idx}` : `${item.type} ${idx}`;
+}
+function practiceNotes() {
+  const bars = result.bars, parts = [];
+  const lead = []; for (const b of bars) { if (isRestBar(b)) lead.push(b.number); else break; }
+  if (lead.length) parts.push(`${lead.length > 1 ? "Bars" : "Bar"} ${rangeText(lead)} ${lead.length > 1 ? "are" : "is"} drums before you come in`);
+  const stac = bars.filter(b => { const ns = items(b).filter(isNote); return ns.length && ns.filter(n => n.articulation === "staccato").length >= ns.length / 2; }).map(b => b.number);
+  if (stac.length) parts.push(`staccato in ${rangeText(stac)}`);
+  for (const b of bars) for (const m of b.marks || []) {
+    if (m.type === "dynamic") parts.push(`${m.value} at ${b.number}`);
+    if (m.value === "crescendo") parts.push(`crescendo from the end of ${b.number}${bars.find(x => x.number === b.number + 1) ? ` through ${b.number + 1}` : ""}`);
+    if (m.value === "diminuendo") parts.push(`diminuendo from ${b.number}`);
+  }
+  const firstSlash = bars.find(isSlashBar);
+  if (firstSlash) parts.push(`${S.slashes === "walk" ? "walk" : "time"} from ${firstSlash.number}`);
+  if (!parts.length) return "";
+  const s = parts.join(", ");
+  return s[0].toUpperCase() + s.slice(1) + ".";
+}
+
+/* ---------- Corrections ---------- */
+let fixing = null;
+function openFix(bar, item) {
+  fixing = { bar, item };
+  const isMark = (bar.marks || []).includes(item);
+  $("fixTitle").textContent = `Bar ${bar.number}, ${describeItem(bar, item)}`;
+  const sure = item.confidence !== undefined ? ` The reader was ${Math.round(item.confidence * 100)}% sure.` : "";
+  if (item.type === "note") {
+    $("fixHint").textContent = `Enter the written pitch as it sits on your chart, with any flat or sharp the key signature gives it, for example Bb2, F3 or C#3.${sure}`;
+    $("fixInput").value = item.pitch || ""; $("fixInput").hidden = false;
+  } else if (item.type === "chord" || isMark) {
+    $("fixHint").textContent = `Enter it as written on your chart.${sure}`;
+    $("fixInput").value = item.value || ""; $("fixInput").hidden = false;
+  } else {
+    $("fixHint").textContent = `Is this ${item.type} right?${sure}`;
+    $("fixInput").hidden = true;
+  }
+  $("fixOk").hidden = !item.flagged;
+  $("fixErr").textContent = "";
+  $("fix").showModal();
+  if (!$("fixInput").hidden) $("fixInput").select();
+}
+$("fixInput").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); $("fixSave").click(); } });
+$("fixForm").addEventListener("submit", e => {
+  const action = e.submitter && e.submitter.value;
+  if (!fixing || action === "cancel") return;
+  const { bar, item } = fixing;
+  if (action === "save" && !$("fixInput").hidden) {
+    const v = $("fixInput").value.trim();
+    if (item.type === "note") {
+      const prev = items(bar).filter(i => i.pitch && i !== item).map(i => parsePitch(i.pitch, centre())).filter(Boolean);
+      const p = parsePitch(v, prev.length ? prev[0].midi : centre());
+      if (!p) { e.preventDefault(); $("fixErr").textContent = "That isn't a pitch I recognise. Try F3, Bb2 or C#3."; return; }
+      item.pitch = p.name;
+    } else item.value = v;
+  }
+  item.flagged = false; item.fixed = true; recalcBar(bar);
+  store.set("ws.result", result);
+  renderAll();
+});
+
+/* ---------- Sections ---------- */
+function sectionPresets() {
+  const bars = result.bars, out = [];
+  const add = (a, b, label) => { if (!out.some(o => o.from === a && o.to === b)) out.push({ from: a, to: b, label }); };
+  add(bars[0].number, bars.at(-1).number, "The whole passage");
+  const fig = bars.filter(isFigureBar);
+  if (fig.length) {
+    let chunk = [], k = 0;
+    const flush = () => {
+      if (!chunk.length) return;
+      const ns = chunk.flatMap(b => items(b).filter(isNote));
+      const stac = ns.length && ns.every(n => n.articulation === "staccato");
+      const cres = chunk.some(b => hasMark(b, "crescendo"));
+      const label = cres ? "Figure, into the crescendo" : `Figure, ${k === 0 ? "first" : "next"} ${chunk.length} bar${chunk.length > 1 ? "s" : ""}${stac ? " (staccato)" : ""}`;
+      add(chunk[0].number, chunk.at(-1).number, label); chunk = []; k++;
+    };
+    for (const b of fig) { if (chunk.length && (b.number !== chunk.at(-1).number + 1 || chunk.length === 4)) flush(); chunk.push(b); }
+    flush();
+    const after = bars.filter(b => b.number > fig.at(-1).number && isSlashBar(b));
+    if (after.length) add(fig[0].number, after.at(-1).number, "The whole figure into the walk");
+  }
+  return out;
+}
+function renderSections() {
+  if (!sel) sel = { from: result.bars[0].number, to: result.bars.at(-1).number };
+  const secs = $("secs"); secs.innerHTML = "";
+  for (const p of sectionPresets()) {
+    const b = document.createElement("button");
+    b.className = "sec" + (p.from === sel.from && p.to === sel.to ? " on" : "");
+    b.innerHTML = `<b>${p.from} to ${p.to}</b><span>${p.label}</span>`;
+    b.onclick = () => setSection(p.from, p.to);
+    secs.append(b);
+  }
+  const grid = $("bargrid"); grid.innerHTML = "";
+  for (const bar of result.bars) {
+    const b = document.createElement("button");
+    b.textContent = bar.number;
+    if (pendingFrom === bar.number) b.className = "from";
+    else if (pendingFrom === null && bar.number >= sel.from && bar.number <= sel.to) b.className = "in";
+    b.onclick = () => {
+      if (pendingFrom === null) { pendingFrom = bar.number; renderSections(); return; }
+      const a = Math.min(pendingFrom, bar.number), z = Math.max(pendingFrom, bar.number);
+      pendingFrom = null; setSection(a, z);
+    };
+    grid.append(b);
+  }
+}
+function setSection(a, z) {
+  sel = { from: a, to: z }; pendingFrom = null;
+  const wasPlaying = !!run; stop(); renderSections(); idleLabel();
+  if (wasPlaying) start();
+}
+
+/* ---------- Tempo ---------- */
+function presetList() { return [0.6, 0.75, 0.9, 1].map(f => Math.round(S.goal * f / 4) * 4); }
+function renderTempo() {
+  const pr = $("presets"); pr.innerHTML = "";
+  presetList().forEach((v, i, arr) => {
+    const b = document.createElement("button");
+    b.className = "chip" + (v === S.bpm ? " on" : "");
+    b.textContent = i === arr.length - 1 ? `${v} goal` : v;
+    b.onclick = () => setBpm(v);
+    pr.append(b);
+  });
+  $("tempoNote").textContent = result && result.time === "cut"
+    ? `Written as half note = ${Math.round(S.goal / 2)} (${S.goal} in quarter notes on this page). In 2.`
+    : `Tempo in quarter notes.`;
+  const fl = $("feel"); fl.innerHTML = "";
+  [["swing", "Swing"], ["hard", "Hard swing"], ["straight", "Straight"]].forEach(([v, t]) => {
+    const b = document.createElement("button");
+    b.className = "chip" + (S.feel === v ? " on" : ""); b.textContent = t;
+    b.onclick = () => { S.feel = v; save(); renderTempo(); };
+    fl.append(b);
+  });
+  $("goal").value = S.goal; $("speedStep").value = S.speedStep; $("speedMax").value = S.speedMax;
+  $("bpm").value = S.bpm; $("bpmNum").textContent = Math.round(S.bpm);
+}
+function setBpm(v) {
+  S.bpm = Math.max(40, Math.min(320, Math.round(v))); save();
+  $("bpm").value = S.bpm; $("bpmNum").textContent = S.bpm;
+  document.querySelectorAll("#presets .chip").forEach((c, i) => c.classList.toggle("on", presetList()[i] === S.bpm));
+}
+$("bpm").oninput = e => setBpm(+e.target.value);
+$("down").onclick = () => setBpm(S.bpm - 2);
+$("up").onclick = () => setBpm(S.bpm + 2);
+$("goal").onchange = e => { S.goal = Math.max(40, Math.min(320, +e.target.value || 120)); S.speedMax = S.goal; save(); renderTempo(); };
+$("speedStep").onchange = e => { S.speedStep = +e.target.value; save(); };
+$("speedMax").onchange = e => { S.speedMax = Math.max(40, Math.min(320, +e.target.value || S.goal)); save(); };
+let taps = [];
+$("tap").onclick = () => {
+  const t = performance.now();
+  if (taps.length && t - taps.at(-1) > 2000) taps = [];
+  taps.push(t); if (taps.length > 5) taps.shift();
+  if (taps.length >= 2) {
+    const gaps = taps.slice(1).map((v, i) => v - taps[i]);
+    setBpm(60000 / (gaps.reduce((a, b) => a + b) / gaps.length));
   }
 };
 
-const DUR = { whole: "1", half: "2", quarter: "4", eighth: "8", sixteenth: "16" };
-
-function label(i) {
-  if (i.type === "rest") return `rest ${DUR[i.duration] || i.duration}`;
-  if (i.type === "slash") return "/";
-  if (i.type === "rhythm") return `/${DUR[i.duration] || ""}`;
-  if (i.type === "chord") return i.value;
-  return `${i.pitch ?? "?"} ${DUR[i.duration] || i.duration}${i.articulation === "staccato" ? "·" : ""}`;
-}
-
-function render() {
-  $("result").hidden = false;
-  $("title").textContent = result.title || "Your part";
-  $("meta").textContent = `${$("instrument").value} · Key ${result.key} · Bars ${result.bars[0].number} to ${result.bars.at(-1).number}`;
-  const left = result.bars.reduce((n, b) =>
-    n + [...b.items, ...(b.marks || [])].filter(i => i.flagged).length, 0);
-  const flaggedBars = result.bars.filter(b => b.flagged).length;
-  $("status").className = left ? "status" : "status ok";
-  $("status").innerHTML = left
-    ? `<b>Status:</b> ${left} item${left > 1 ? "s" : ""} in ${flaggedBars} bar${flaggedBars > 1 ? "s" : ""} need checking.`
-    : `<b>Status:</b> Everything checked. Ready to practise.`;
-
-  $("bars").innerHTML = "";
-  for (const bar of result.bars) {
-    const el = document.createElement("div");
-    el.className = "bar" + (bar.flagged ? " flagged" : "");
-    el.innerHTML = `<h3>Bar ${bar.number}<span>${bar.flagged ? "Check this bar" : Math.round(bar.confidence * 100) + "%"}</span></h3>`;
-    for (const item of bar.items) {
-      const s = document.createElement("span");
-      s.className = "item" + (item.flagged ? " flagged" : "") + (item.fixed ? " fixed" : "");
-      s.textContent = label(item);
-      if (item.flagged) s.title = `Reader was ${Math.round(item.confidence * 100)}% sure. Tap to fix.`;
-      if (item.flagged) s.onclick = () => fix(bar, item);
-      el.append(s);
-    }
-    if (bar.marks?.length) {
-      const m = document.createElement("div");
-      m.className = "marks";
-      m.innerHTML = bar.marks.map(k =>
-        `<span class="${k.flagged ? "flagged" : ""}">${k.value}</span>`).join(", ");
-      el.append(m);
-    }
-    $("bars").append(el);
+/* ---------- Mix ---------- */
+function renderMix() {
+  const mix = $("mix"); mix.innerHTML = "";
+  for (const [k, label] of [["guide", "Guide"], ["drums", "Drums"], ["click", "Click"]]) {
+    const row = document.createElement("div"); row.className = "mixrow";
+    row.innerHTML = `<label><input type="checkbox" ${S.mix[k].on ? "checked" : ""}> ${label}</label>
+      <input type="range" min="0" max="1" step="0.01" value="${S.mix[k].vol}" aria-label="${label} level">`;
+    row.querySelector("input[type=checkbox]").onchange = e => { S.mix[k].on = e.target.checked; save(); levels(); };
+    row.querySelector("input[type=range]").oninput = e => { S.mix[k].vol = +e.target.value; save(); levels(); };
+    mix.append(row);
+  }
+  for (const id of ["guidePlays", "figures", "slashes", "clickOn", "restBars"]) {
+    $(id).value = S[id];
+    $(id).onchange = e => { S[id] = id === "restBars" ? +e.target.value : e.target.value; save();
+      if (id === "figures") renderScore(); if (id === "slashes") renderText(); };
+  }
+  for (const id of ["loop", "repeats", "follow", "raise"]) {
+    $(id).checked = S[id];
+    $(id).onchange = e => { S[id] = e.target.checked; save(); if (id === "raise") renderText(); };
   }
 }
 
-function fix(bar, item) {
-  const current = item.type === "note" ? (item.pitch ?? "") : (item.value ?? "");
-  const what = item.type === "note" ? "written pitch, e.g. B2 or Bb2" : "value";
-  const answer = prompt(`Bar ${bar.number}: enter the ${what} as it appears on your chart.`, current);
-  if (answer === null) return;
-  if (item.type === "note") item.pitch = answer.trim() || null;
-  else item.value = answer.trim();
-  item.flagged = false;
-  item.fixed = true;
-  bar.flagged = [...bar.items, ...(bar.marks || [])].some(i => i.flagged);
-  render();
+/* ---------- Audio ---------- */
+let ac = null, noise = null, run = null;
+function audio() {
+  if (!ac) {
+    ac = new (window.AudioContext || window.webkitAudioContext)();
+    noise = ac.createBuffer(1, ac.sampleRate, ac.sampleRate);
+    const d = noise.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  }
+  if (ac.state === "suspended") ac.resume();
+  return ac;
+}
+function levels() {
+  if (!run) return;
+  for (const k of ["guide", "drums", "click"]) {
+    const m = S.mix[k], g = m.on ? m.vol * m.vol * 1.4 : 0;
+    run.bus[k].gain.setTargetAtTime(g, ac.currentTime, 0.02);
+  }
+}
+const hz = m => 440 * Math.pow(2, (m - 69) / 12);
+function tone(t, midi, dur, { staccato = false, accent = false, hit = false } = {}) {
+  const kind = inst().tone, out = run.bus.guide;
+  const f = hz(midi), end = t + (hit ? 0.09 : dur * (staccato ? 0.45 : 0.92));
+  const g = ac.createGain(), lp = ac.createBiquadFilter();
+  lp.type = "lowpass";
+  const o1 = ac.createOscillator(), o2 = ac.createOscillator();
+  if (kind === "bass") {
+    o1.type = "triangle"; o2.type = "sine"; o2.frequency.value = f;
+    lp.frequency.setValueAtTime(Math.min(4000, f * 8), t); lp.frequency.setTargetAtTime(f * 3, t, 0.08);
+  } else if (kind === "keys") {
+    o1.type = "triangle"; o2.type = "sine"; o2.frequency.value = f * 2;
+    lp.frequency.value = 3000;
+  } else {
+    o1.type = "sawtooth"; o2.type = "triangle"; o2.frequency.value = f;
+    lp.frequency.setValueAtTime(900, t); lp.frequency.linearRampToValueAtTime(2200, t + 0.06);
+  }
+  o1.frequency.value = f;
+  const peak = (accent ? 0.5 : 0.42) * (kind === "lead" ? 0.55 : 1);
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.linearRampToValueAtTime(peak, t + 0.008);
+  g.gain.setTargetAtTime(peak * (kind === "lead" ? 0.75 : 0.45), t + 0.01, kind === "lead" ? 0.2 : 0.12);
+  g.gain.setTargetAtTime(0.0001, end, 0.035);
+  o1.connect(lp); o2.connect(lp); lp.connect(g); g.connect(out);
+  o1.start(t); o2.start(t); o1.stop(end + 0.3); o2.stop(end + 0.3);
+}
+function noiseHit(t, { hp = 6000, bp = 0, decay = 0.08, vol = 0.3, bus = "drums" }) {
+  const src = ac.createBufferSource(); src.buffer = noise;
+  const h = ac.createBiquadFilter(); h.type = "highpass"; h.frequency.value = hp;
+  const g = ac.createGain();
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + decay);
+  let node = src.connect(h);
+  if (bp) { const b = ac.createBiquadFilter(); b.type = "bandpass"; b.frequency.value = bp; b.Q.value = 0.9; node = node.connect(b); }
+  node.connect(g); g.connect(run.bus[bus]);
+  src.start(t, Math.random() * 0.5); src.stop(t + decay + 0.05);
+}
+function ride(t, vol) {
+  noiseHit(t, { hp: 5000, bp: 8500, decay: 0.32, vol: 0.32 * vol });
+  const o = ac.createOscillator(), g = ac.createGain();
+  o.type = "square"; o.frequency.value = 5600 + Math.random() * 60;
+  g.gain.setValueAtTime(0.012 * vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.25);
+  const h = ac.createBiquadFilter(); h.type = "highpass"; h.frequency.value = 4000;
+  o.connect(h); h.connect(g); g.connect(run.bus.drums); o.start(t); o.stop(t + 0.3);
+}
+const hat = (t, vol = 1) => noiseHit(t, { hp: 7500, decay: 0.045, vol: 0.28 * vol });
+function kick(t, vol = 1) {
+  const o = ac.createOscillator(), g = ac.createGain();
+  o.frequency.setValueAtTime(110, t); o.frequency.exponentialRampToValueAtTime(42, t + 0.12);
+  g.gain.setValueAtTime(0.35 * vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.18);
+  o.connect(g); g.connect(run.bus.drums); o.start(t); o.stop(t + 0.2);
+}
+function click(t, accent) {
+  const o = ac.createOscillator(), g = ac.createGain();
+  o.frequency.value = accent ? 2000 : 1500;
+  g.gain.setValueAtTime(0.4, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.035);
+  o.connect(g); g.connect(run.bus.click); o.start(t); o.stop(t + 0.05);
+}
+
+/* ---------- Sequencing ---------- */
+const ratio = () => ({ swing: 0.64, hard: 0.72, straight: 0.5 })[S.feel];
+function at(t0, beat, pos) {               // pos in quarter-note beats within the bar, swung
+  const b = Math.floor(pos + 1e-6), f = pos - b, r = ratio();
+  const sw = f <= 0.5 ? (f / 0.5) * r : r + ((f - 0.5) / 0.5) * (1 - r);
+  return t0 + (b + sw) * beat;
+}
+function sectionBars() {
+  const bars = result.bars.filter(b => b.number >= sel.from && b.number <= sel.to);
+  if (!S.repeats) return bars;
+  const out = []; let start = 0;          // repeat marks: { type: "repeat", value: "start" | "end" }
+  bars.forEach((b, i) => {
+    if ((b.marks || []).some(m => m.type === "repeat" && m.value === "start")) start = out.length;
+    out.push(b);
+    if ((b.marks || []).some(m => m.type === "repeat" && m.value === "end")) out.push(...out.slice(start, out.length)), start = out.length;
+  });
+  return out;
+}
+function* plan() {
+  yield { kind: "count", n: 1 }; yield { kind: "count", n: 2 };
+  const bars = sectionBars();
+  for (let pass = 0; ; pass++) {
+    for (let i = 0; i < bars.length; i++) yield { kind: "bar", bar: bars[i], next: bars[i + 1] || bars[0], pass, first: i === 0 };
+    if (!S.loop) { yield { kind: "end" }; return; }
+    for (let r = 0; r < S.restBars; r++) yield { kind: "rest", pass };
+  }
+}
+function guideOn(pass) {
+  return S.guidePlays === "every" || (S.guidePlays === "other" && pass % 2 === 0) || (S.guidePlays === "first" && pass === 0);
+}
+let lastChord = null;
+function scheduleBar(e, t0) {
+  const beat = 60 / S.bpm, ev = run.ui;
+  if (e.kind === "end") { ev.push({ t: t0, end: true }); return; }
+  for (let k = 0; k < 4; k++) ev.push({ t: t0 + k * beat, beat: k,
+    label: e.kind === "count" ? `Count ${e.n}` : e.kind === "rest" ? "Rest" : `Bar ${e.bar.number}`,
+    bar: e.kind === "bar" ? e.bar.number : null, pass: e.pass });
+
+  // drums: ride with skip notes, hi-hat on 2 and 4, feathered bass drum
+  for (let k = 0; k < 4; k++) {
+    if (e.kind === "count") { hat(t0 + k * beat, k === 0 ? 1.2 : 0.9); continue; }
+    ride(at(t0, beat, k), k % 2 ? 0.9 : 1);
+    if (k % 2) { ride(at(t0, beat, k + 0.5), 0.6); hat(t0 + k * beat); }
+    kick(t0 + k * beat, 0.35);
+  }
+  // click
+  for (let k = 0; k < 4; k++) {
+    const want = e.kind === "count" ? true : S.clickOn === "all" ? true : S.clickOn === "24" ? k % 2 === 1 : k % 2 === 0;
+    if (want) click(t0 + k * beat, e.kind === "count" && k === 0);
+  }
+  if (e.kind !== "bar" || !guideOn(e.pass)) return;
+
+  const shift = inst().transpose + (S.raise ? 12 : 0);
+  const bar = e.bar;
+  if (isSlashBar(bar)) {
+    const c = parseChord(chordOf(bar)) || lastChord || parseChord(result.key);
+    lastChord = c; if (!c) return;
+    const nc = parseChord(chordOf(e.next)) || c;
+    const lo = centre() - 5, r = inRange(c.root, lo), nr = inRange(nc.root, lo);
+    let line;
+    if (S.slashes === "roots") line = [[0, r, 2], [2, r, 2]];
+    else {
+      let app = nr - 1; if (app === r + c.fifth || app === r) app = nr + 1;
+      const alt = e.pass % 2 ? [r, r + c.fifth, r + c.third, app] : [r, r + c.third, r + c.fifth, app];
+      line = alt.map((m, k) => [k, m, 1]);
+    }
+    for (const [pos, m, len] of line) tone(at(t0, beat, pos), m + shift, len * beat, { accent: pos === 0 });
+    return;
+  }
+  let pos = 0, near = centre();
+  for (const it of items(bar)) {
+    if (it.type === "chord") continue;
+    const len = BEATS[it.duration] || 1;
+    if (it.type === "note") {
+      const p = parsePitch(it.pitch, near);
+      const t = at(t0, beat, pos), d = at(t0, beat, pos + len) - t;
+      if (p && S.figures === "pitches") { near = p.midi; tone(t, p.midi + shift, d, { staccato: it.articulation === "staccato" }); }
+      else tone(t, inRange((parseChord(result.key) || { root: 0 }).root, centre() - 5) + shift, d, { hit: true });
+    }
+    pos += len;
+  }
+}
+function start() {
+  audio();
+  const out = ac.createGain(); out.connect(ac.destination);
+  const comp = ac.createDynamicsCompressor(); comp.connect(out);
+  const bus = {}; for (const k of ["guide", "drums", "click"]) { bus[k] = ac.createGain(); bus[k].connect(comp); }
+  run = { out, bus, seq: plan(), next: ac.currentTime + 0.12, ui: [], passSeen: 0, timer: 0, raf: 0 };
+  lastChord = null;
+  levels();
+  run.timer = setInterval(tick, 25); tick();
+  run.raf = requestAnimationFrame(draw);
+  $("play").textContent = "Stop"; $("play").classList.add("on");
+}
+function tick() {
+  if (!run) return;
+  while (run.next < ac.currentTime + 0.25) {
+    const { value: e, done } = run.seq.next();
+    if (done) return;
+    if (e.kind === "bar" && e.first && e.pass > run.passSeen) {
+      run.passSeen = e.pass;
+      if (S.speedStep && S.bpm < S.speedMax) setBpm(Math.min(S.speedMax, S.bpm + S.speedStep));
+    }
+    scheduleBar(e, run.next);
+    if (e.kind === "end") { run.next = Infinity; return; }
+    run.next += 4 * 60 / S.bpm;
+  }
+}
+function draw() {
+  if (!run) return;
+  const now = ac.currentTime;
+  let latest = null;
+  while (run.ui.length && run.ui[0].t <= now) latest = run.ui.shift();
+  if (latest) {
+    if (latest.end) { stop(); return; }
+    $("barLabel").textContent = latest.label;
+    document.querySelectorAll("#dots i").forEach((d, k) => d.classList.toggle("on", k === latest.beat));
+    if (latest.beat === 0) {
+      showNow(latest.bar);
+      $("msg").textContent = latest.bar === null && latest.label.startsWith("Count") ? "Counting in…"
+        : `Pass ${(latest.pass || 0) + 1} at ${Math.round(S.bpm)}.`;
+    }
+  }
+  run.raf = requestAnimationFrame(draw);
+}
+function stop() {
+  if (!run) return;
+  clearInterval(run.timer); cancelAnimationFrame(run.raf);
+  const r = run; run = null;
+  r.out.gain.setTargetAtTime(0.0001, ac.currentTime, 0.02);
+  setTimeout(() => r.out.disconnect(), 300);
+  $("play").textContent = "Play"; $("play").classList.remove("on");
+  document.querySelectorAll("#dots i").forEach(d => d.classList.remove("on"));
+  showNow(null); idleLabel();
+}
+function idleLabel() {
+  if (!result || !sel) return;
+  $("barLabel").textContent = `Bar ${sel.from}`;
+  $("msg").textContent = "Ready. Two-bar count-in.";
+}
+$("play").onclick = () => (run ? stop() : start());
+document.addEventListener("keydown", e => {
+  if (e.code === "Space" && !/INPUT|SELECT|TEXTAREA|BUTTON/.test(document.activeElement.tagName) && !$("fix").open) {
+    e.preventDefault(); run ? stop() : start();
+  }
+});
+
+/* ---------- Put it together ---------- */
+function renderAll() {
+  if (!result || !result.bars || !result.bars.length) return;
+  $("player").hidden = false;
+  if (sel && !result.bars.some(b => b.number === sel.from)) sel = null;
+  renderText(); renderScore(); renderSections(); renderTempo(); renderMix();
+  if (!run) idleLabel();
+}
+let resizeT = 0, lastW = 0;
+window.addEventListener("resize", () => {
+  clearTimeout(resizeT);
+  resizeT = setTimeout(() => { const w = $("scorewrap").clientWidth; if (result && w !== lastW) { lastW = w; renderScore(); } }, 150);
+});
+if (!window.Vex) {
+  $("uploadStatus").hidden = false;
+  $("uploadStatus").innerHTML = "<b>Status:</b> The notation library didn't load. Check your connection and reload.";
+} else if (result) {
+  renderAll();
 }
 </script>
 </body>
