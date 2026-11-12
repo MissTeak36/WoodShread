@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WoodShread</title>
+<style>
+  :root {
+    --bg: #e6e8e6; --panel: #f2f4f1; --paper: #faf9f4; --line: #cfd2cd;
+    --ink: #1f2324; --muted: #5d6466; --accent: #a0762b; --accent-soft: #f3deb2;
+    --flag: #c0392b; --flag-soft: #fbe3e0;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 900px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { margin: 0 0 4px; font-size: 1.8rem; }
+  h2 { margin: 0 0 12px; font-size: 1.25rem; }
+  .sub { color: var(--muted); margin: 0 0 20px; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+           padding: 20px; margin-bottom: 16px; }
+  label { display: block; font-weight: 600; margin: 12px 0 6px; }
+  select, input[type=text] { width: 100%; padding: 10px 12px; font: inherit;
+           background: var(--paper); border: 1px solid var(--line); border-radius: 8px; }
+  button { font: inherit; font-weight: 600; padding: 12px 24px; border: 0; border-radius: 8px;
+           background: var(--accent); color: #fff; cursor: pointer; margin-top: 16px; }
+  button:disabled { opacity: .5; cursor: default; }
+  .status { margin: 0 0 16px; }
+  .status b { color: var(--flag); }
+  .status.ok b { color: var(--accent); }
+  .meta { font-family: ui-monospace, Menlo, monospace; color: var(--muted); font-size: .9rem; }
+  .bars { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+  .bar { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+  .bar.flagged { border-color: var(--flag); background: var(--flag-soft); }
+  .bar h3 { margin: 0 0 6px; font-size: .95rem; display: flex; justify-content: space-between; }
+  .bar h3 span { font-weight: 400; color: var(--muted); font-size: .8rem; }
+  .bar.flagged h3 span { color: var(--flag); font-weight: 600; }
+  .item { display: inline-block; margin: 2px 4px 2px 0; padding: 2px 6px; border-radius: 4px;
+          font-family: ui-monospace, Menlo, monospace; font-size: .85rem; background: #ecebe4; }
+  .item.flagged { color: #fff; background: var(--flag); cursor: pointer; }
+  .item.fixed { background: var(--accent-soft); }
+  .marks { color: var(--muted); font-size: .8rem; margin-top: 4px; }
+  .marks .flagged { color: var(--flag); font-weight: 600; }
+  .hint { color: var(--muted); font-size: .9rem; margin: 12px 0 0; }
+  details { margin-top: 12px; color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+  <h1>WoodShread</h1>
+  <p class="sub">Upload a scan of your part, check anything in red, then practise it.</p>
+
+  <section class="panel">
+    <h2>Your part</h2>
+    <label for="instrument">Instrument</label>
+    <select id="instrument"></select>
+    <label for="file">Scan (PNG, JPEG or PDF)</label>
+    <input id="file" type="file" accept="image/png,image/jpeg,application/pdf">
+    <button id="read" disabled>Read the scan</button>
+    <details>
+      <summary>Scanner address</summary>
+      <label for="api">Scanner URL</label>
+      <input id="api" type="text">
+    </details>
+  </section>
+
+  <section class="panel" id="result" hidden>
+    <h2 id="title"></h2>
+    <p class="meta" id="meta"></p>
+    <p class="status" id="status"></p>
+    <div class="bars" id="bars"></div>
+    <p class="hint">Red items are ones the reader wasn't sure of. Tap one to confirm or correct it against your chart.</p>
+  </section>
+</main>
+
+<script>
+// Instruments: clef, transposition from written to concert (semitones), guide octave.
+const INSTRUMENTS = {
+  "Bass (upright or electric)": { clef: "bass", transpose: -12 },
+  "Piano / keys":               { clef: "treble", transpose: 0 },
+  "Guitar":                     { clef: "treble", transpose: -12 },
+  "Trumpet in B♭":              { clef: "treble", transpose: -2 },
+  "Alto sax in E♭":             { clef: "treble", transpose: -9 },
+  "Tenor sax in B♭":            { clef: "treble", transpose: -14 },
+  "Baritone sax in E♭":         { clef: "treble", transpose: -21 },
+  "Trombone":                   { clef: "bass", transpose: 0 },
+  "Flute":                      { clef: "treble", transpose: 0 },
+  "Clarinet in B♭":             { clef: "treble", transpose: -2 },
+  "Violin":                     { clef: "treble", transpose: 0 },
+  "Cello":                      { clef: "bass", transpose: 0 },
+};
+
+const $ = id => document.getElementById(id);
+const store = {
+  get(k, d) { try { return localStorage.getItem(k) ?? d; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch {} },
+};
+
+for (const name of Object.keys(INSTRUMENTS)) $("instrument").add(new Option(name, name));
+$("instrument").value = store.get("ws.instrument", "Bass (upright or electric)");
+$("instrument").onchange = e => store.set("ws.instrument", e.target.value);
+
+$("api").value = store.get("ws.api", "http://localhost:8000");
+$("api").onchange = e => store.set("ws.api", e.target.value.replace(/\/$/, ""));
+
+$("file").onchange = () => { $("read").disabled = !$("file").files.length; };
+
+let result = null;
+
+$("read").onclick = async () => {
+  const fd = new FormData();
+  fd.append("file", $("file").files[0]);
+  $("read").disabled = true;
+  $("read").textContent = "Reading…";
+  try {
+    const res = await fetch($("api").value + "/scan", { method: "POST", body: fd });
+    if (!res.ok) throw new Error((await res.json()).detail || res.statusText);
+    result = await res.json();
+    render();
+  } catch (err) {
+    $("result").hidden = false;
+    $("status").className = "status";
+    $("status").innerHTML = `<b>Status:</b> Couldn't read the scan. ${err.message}`;
+    $("bars").innerHTML = "";
+  } finally {
+    $("read").disabled = false;
+    $("read").textContent = "Read the scan";
+  }
+};
+
+const DUR = { whole: "1", half: "2", quarter: "4", eighth: "8", sixteenth: "16" };
+
+function label(i) {
+  if (i.type === "rest") return `rest ${DUR[i.duration] || i.duration}`;
+  if (i.type === "slash") return "/";
+  if (i.type === "rhythm") return `/${DUR[i.duration] || ""}`;
+  if (i.type === "chord") return i.value;
+  return `${i.pitch ?? "?"} ${DUR[i.duration] || i.duration}${i.articulation === "staccato" ? "·" : ""}`;
+}
+
+function render() {
+  $("result").hidden = false;
+  $("title").textContent = result.title || "Your part";
+  $("meta").textContent = `${$("instrument").value} · Key ${result.key} · Bars ${result.bars[0].number} to ${result.bars.at(-1).number}`;
+  const left = result.bars.reduce((n, b) =>
+    n + [...b.items, ...(b.marks || [])].filter(i => i.flagged).length, 0);
+  const flaggedBars = result.bars.filter(b => b.flagged).length;
+  $("status").className = left ? "status" : "status ok";
+  $("status").innerHTML = left
+    ? `<b>Status:</b> ${left} item${left > 1 ? "s" : ""} in ${flaggedBars} bar${flaggedBars > 1 ? "s" : ""} need checking.`
+    : `<b>Status:</b> Everything checked. Ready to practise.`;
+
+  $("bars").innerHTML = "";
+  for (const bar of result.bars) {
+    const el = document.createElement("div");
+    el.className = "bar" + (bar.flagged ? " flagged" : "");
+    el.innerHTML = `<h3>Bar ${bar.number}<span>${bar.flagged ? "Check this bar" : Math.round(bar.confidence * 100) + "%"}</span></h3>`;
+    for (const item of bar.items) {
+      const s = document.createElement("span");
+      s.className = "item" + (item.flagged ? " flagged" : "") + (item.fixed ? " fixed" : "");
+      s.textContent = label(item);
+      if (item.flagged) s.title = `Reader was ${Math.round(item.confidence * 100)}% sure. Tap to fix.`;
+      if (item.flagged) s.onclick = () => fix(bar, item);
+      el.append(s);
+    }
+    if (bar.marks?.length) {
+      const m = document.createElement("div");
+      m.className = "marks";
+      m.innerHTML = bar.marks.map(k =>
+        `<span class="${k.flagged ? "flagged" : ""}">${k.value}</span>`).join(", ");
+      el.append(m);
+    }
+    $("bars").append(el);
+  }
+}
+
+function fix(bar, item) {
+  const current = item.type === "note" ? (item.pitch ?? "") : (item.value ?? "");
+  const what = item.type === "note" ? "written pitch, e.g. B2 or Bb2" : "value";
+  const answer = prompt(`Bar ${bar.number}: enter the ${what} as it appears on your chart.`, current);
+  if (answer === null) return;
+  if (item.type === "note") item.pitch = answer.trim() || null;
+  else item.value = answer.trim();
+  item.flagged = false;
+  item.fixed = true;
+  bar.flagged = [...bar.items, ...(bar.marks || [])].some(i => i.flagged);
+  render();
+}
+</script>
+</body>
+</html>
